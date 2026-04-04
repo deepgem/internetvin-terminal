@@ -1,4 +1,14 @@
-import { Plugin, ItemView, WorkspaceLeaf, App, TFile, setIcon, SuggestModal, Modal, Menu } from "obsidian";
+import {
+  Plugin,
+  ItemView,
+  WorkspaceLeaf,
+  App,
+  TFile,
+  setIcon,
+  SuggestModal,
+  Modal,
+  Menu,
+} from "obsidian";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import type { ChildProcess } from "child_process";
@@ -7,7 +17,7 @@ const VIEW_TYPE = "vin-terminal-view";
 let ptyHelperPath = "";
 
 const PTY_HELPER_PY = `\
-"""PTY helper for vin-terminal. Wraps zsh in a real PTY with resize support."""
+"""PTY helper for vin-terminal. Wraps fish in a real PTY with resize support."""
 import os, select, signal, struct, fcntl, termios, pty
 
 def main():
@@ -26,7 +36,7 @@ def main():
         os.dup2(slave, 2)
         if slave > 2:
             os.close(slave)
-        os.execvp("/bin/zsh", ["/bin/zsh", "-i", "-l"])
+        os.execvp("/opt/homebrew/bin/fish", ["/opt/homebrew/bin/fish", "-i", "-l"])
     os.close(slave)
     def resize(c, r):
         fcntl.ioctl(master, termios.TIOCSWINSZ,
@@ -99,46 +109,47 @@ function getObsidianTheme(): Record<string, string> {
 
   const bg = get("--background-primary") || (isDark ? "#1e1e1e" : "#ffffff");
   const fg = get("--text-normal") || (isDark ? "#dcddde" : "#1a1a1a");
-  const accent = get("--interactive-accent") || (isDark ? "#7f6df2" : "#705dcf");
+  const accent =
+    get("--interactive-accent") || (isDark ? "#7f6df2" : "#705dcf");
   const muted = get("--text-muted") || (isDark ? "#999" : "#666");
 
   // ANSI palette: two variants for dark and light backgrounds
   const ansi = isDark
     ? {
-        black:         "#1a1a2e",
-        red:           "#e06c75",
-        green:         "#98c379",
-        yellow:        "#e5c07b",
-        blue:          "#61afef",
-        magenta:       "#c678dd",
-        cyan:          "#56b6c2",
-        white:         "#abb2bf",
-        brightBlack:   "#5c6370",
-        brightRed:     "#e88388",
-        brightGreen:   "#a9d18e",
-        brightYellow:  "#ebd09c",
-        brightBlue:    "#7ec8e3",
+        black: "#1a1a2e",
+        red: "#e06c75",
+        green: "#98c379",
+        yellow: "#e5c07b",
+        blue: "#61afef",
+        magenta: "#c678dd",
+        cyan: "#56b6c2",
+        white: "#abb2bf",
+        brightBlack: "#5c6370",
+        brightRed: "#e88388",
+        brightGreen: "#a9d18e",
+        brightYellow: "#ebd09c",
+        brightBlue: "#7ec8e3",
         brightMagenta: "#d19de0",
-        brightCyan:    "#73cdd6",
-        brightWhite:   "#f0f0f0",
+        brightCyan: "#73cdd6",
+        brightWhite: "#f0f0f0",
       }
     : {
-        black:         "#383a42",
-        red:           "#d73a49",
-        green:         "#22863a",
-        yellow:        "#b08800",
-        blue:          "#0366d6",
-        magenta:       "#6f42c1",
-        cyan:          "#0598bc",
-        white:         "#6a737d",
-        brightBlack:   "#959da5",
-        brightRed:     "#cb2431",
-        brightGreen:   "#28a745",
-        brightYellow:  "#dbab09",
-        brightBlue:    "#2188ff",
+        black: "#383a42",
+        red: "#d73a49",
+        green: "#22863a",
+        yellow: "#b08800",
+        blue: "#0366d6",
+        magenta: "#6f42c1",
+        cyan: "#0598bc",
+        white: "#6a737d",
+        brightBlack: "#959da5",
+        brightRed: "#cb2431",
+        brightGreen: "#28a745",
+        brightYellow: "#dbab09",
+        brightBlue: "#2188ff",
         brightMagenta: "#8a63d2",
-        brightCyan:    "#3192aa",
-        brightWhite:   "#24292e",
+        brightCyan: "#3192aa",
+        brightWhite: "#24292e",
       };
 
   return {
@@ -146,7 +157,9 @@ function getObsidianTheme(): Record<string, string> {
     foreground: fg,
     cursor: muted,
     cursorAccent: bg,
-    selectionBackground: isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)",
+    selectionBackground: isDark
+      ? "rgba(255, 255, 255, 0.15)"
+      : "rgba(0, 0, 0, 0.15)",
     selectionForeground: isDark ? "#f0f0f0" : "#1a1a1a",
     ...ansi,
   };
@@ -158,10 +171,10 @@ function getObsidianTheme(): Record<string, string> {
 // On dismiss we just close the dropdown (the [[ is already in the shell).
 
 interface AutocompleteEntry {
-  name: string;        // display name (basename for files, link text for unresolved)
-  folder: string;      // folder path for files, empty for unresolved
-  isFile: boolean;     // true = existing file, false = unresolved link
-  mtime: number;       // for sorting (0 for unresolved)
+  name: string; // display name (basename for files, link text for unresolved)
+  folder: string; // folder path for files, empty for unresolved
+  isFile: boolean; // true = existing file, false = unresolved link
+  mtime: number; // for sorting (0 for unresolved)
 }
 
 class WikiLinkAutocomplete {
@@ -179,7 +192,12 @@ class WikiLinkAutocomplete {
   private previewEl: HTMLElement | null = null;
   private resizeDisposable: { dispose(): void } | null = null;
 
-  constructor(app: App, terminal: Terminal, writeToShell: (data: string) => void, containerEl: HTMLElement) {
+  constructor(
+    app: App,
+    terminal: Terminal,
+    writeToShell: (data: string) => void,
+    containerEl: HTMLElement,
+  ) {
     this.app = app;
     this.terminal = terminal;
     this.writeToShell = writeToShell;
@@ -206,7 +224,10 @@ class WikiLinkAutocomplete {
           return false;
         case "ArrowDown":
           e.preventDefault();
-          this.selectedIndex = Math.min(this.results.length - 1, this.selectedIndex + 1);
+          this.selectedIndex = Math.min(
+            this.results.length - 1,
+            this.selectedIndex + 1,
+          );
           this.renderDropdown();
           return false;
         case "Enter":
@@ -328,7 +349,9 @@ class WikiLinkAutocomplete {
     }
 
     // Unresolved links from metadata cache
-    const unresolved = (this.app.metadataCache as any).unresolvedLinks as Record<string, Record<string, number>> | undefined;
+    const unresolved = (this.app.metadataCache as any).unresolvedLinks as
+      | Record<string, Record<string, number>>
+      | undefined;
     if (unresolved) {
       for (const sourceFile of Object.values(unresolved)) {
         for (const linkTarget of Object.keys(sourceFile)) {
@@ -371,7 +394,10 @@ class WikiLinkAutocomplete {
         this.results = [...prefix, ...contains].slice(0, 10);
       }
 
-      this.selectedIndex = Math.min(this.selectedIndex, Math.max(0, this.results.length - 1));
+      this.selectedIndex = Math.min(
+        this.selectedIndex,
+        Math.max(0, this.results.length - 1),
+      );
       this.renderDropdown();
     }, 16);
   }
@@ -453,7 +479,7 @@ class WikiLinkAutocomplete {
 
     // Vertical: prefer below cursor, flip above if not enough space
     const cursorBottom = offsetY + (cursorY + 1) * cellH;
-    if ((containerHeight - cursorBottom) > dropdownHeight || cursorY < rows / 2) {
+    if (containerHeight - cursorBottom > dropdownHeight || cursorY < rows / 2) {
       this.dropdownEl.style.top = `${cursorBottom}px`;
       this.dropdownEl.style.bottom = "";
     } else {
@@ -487,7 +513,7 @@ class WikiLinkAutocomplete {
     this.positionPreview();
 
     const file = this.app.vault.getAbstractFileByPath(
-      entry.folder ? `${entry.folder}/${entry.name}.md` : `${entry.name}.md`
+      entry.folder ? `${entry.folder}/${entry.name}.md` : `${entry.name}.md`,
     );
     if (!file || !(file instanceof TFile)) {
       this.previewEl.innerHTML = `<div class="vin-preview-empty">File not found</div>`;
@@ -499,7 +525,7 @@ class WikiLinkAutocomplete {
     const preview = lines.join("\n");
 
     const cache = this.app.metadataCache.getFileCache(file);
-    const tags = cache?.tags?.map(t => t.tag) ?? [];
+    const tags = cache?.tags?.map((t) => t.tag) ?? [];
     const frontmatterTags = cache?.frontmatter?.tags ?? [];
     const allTags = [...new Set([...tags, ...frontmatterTags])];
 
@@ -511,7 +537,9 @@ class WikiLinkAutocomplete {
 
     const modified = new Date(file.stat.mtime);
     const dateStr = modified.toLocaleDateString("en-US", {
-      month: "short", day: "numeric", year: "numeric"
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
 
     let html = `<div class="vin-preview-meta">`;
@@ -519,7 +547,7 @@ class WikiLinkAutocomplete {
     html += `<span class="vin-preview-backlinks">${backlinkCount} backlink${backlinkCount !== 1 ? "s" : ""}</span>`;
     html += `</div>`;
     if (allTags.length > 0) {
-      html += `<div class="vin-preview-tags">${allTags.map(t => `<span class="vin-preview-tag">${this.escapeHtml(String(t))}</span>`).join("")}</div>`;
+      html += `<div class="vin-preview-tags">${allTags.map((t) => `<span class="vin-preview-tag">${this.escapeHtml(String(t))}</span>`).join("")}</div>`;
     }
     html += `<div class="vin-preview-content">${this.escapeHtml(preview)}</div>`;
     this.previewEl.innerHTML = html;
@@ -550,7 +578,11 @@ class WikiLinkAutocomplete {
   }
 
   private escapeHtml(text: string): string {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   destroy() {
@@ -637,7 +669,14 @@ class BookmarkManager {
     pipEl.addEventListener("click", () => this.jumpTo(bookmark));
     this.stripEl.appendChild(pipEl);
 
-    const bookmark: Bookmark = { id, marker, decoration, label: bookmarkLabel, timestamp: Date.now(), pipEl };
+    const bookmark: Bookmark = {
+      id,
+      marker,
+      decoration,
+      label: bookmarkLabel,
+      timestamp: Date.now(),
+      pipEl,
+    };
     this.bookmarks.push(bookmark);
 
     // Auto-remove when scrollback is trimmed
@@ -659,7 +698,9 @@ class BookmarkManager {
 
   jumpNext() {
     if (this.bookmarks.length === 0) return;
-    const sorted = [...this.bookmarks].sort((a, b) => a.marker.line - b.marker.line);
+    const sorted = [...this.bookmarks].sort(
+      (a, b) => a.marker.line - b.marker.line,
+    );
     const viewportY = this.terminal.buffer.active.viewportY;
     const next = sorted.find((b) => b.marker.line > viewportY + 1);
     this.jumpTo(next ?? sorted[0]); // wrap around
@@ -667,9 +708,14 @@ class BookmarkManager {
 
   jumpPrev() {
     if (this.bookmarks.length === 0) return;
-    const sorted = [...this.bookmarks].sort((a, b) => a.marker.line - b.marker.line);
+    const sorted = [...this.bookmarks].sort(
+      (a, b) => a.marker.line - b.marker.line,
+    );
     const viewportY = this.terminal.buffer.active.viewportY;
-    const prev = sorted.slice().reverse().find((b) => b.marker.line < viewportY);
+    const prev = sorted
+      .slice()
+      .reverse()
+      .find((b) => b.marker.line < viewportY);
     this.jumpTo(prev ?? sorted[sorted.length - 1]); // wrap around
   }
 
@@ -684,8 +730,16 @@ class BookmarkManager {
     if (idx === -1) return;
     this.bookmarks.splice(idx, 1);
     bookmark.pipEl?.remove();
-    try { bookmark.decoration?.dispose(); } catch { /* already disposed */ }
-    try { bookmark.marker?.dispose(); } catch { /* already disposed */ }
+    try {
+      bookmark.decoration?.dispose();
+    } catch {
+      /* already disposed */
+    }
+    try {
+      bookmark.marker?.dispose();
+    } catch {
+      /* already disposed */
+    }
   }
 
   private updateStrip() {
@@ -729,7 +783,7 @@ class TerminalSession {
 
   constructor(parent: HTMLElement, id: number, cwd: string, app: App) {
     this.id = id;
-    this.name = `zsh ${id}`;
+    this.name = `fish ${id}`;
     this.app = app;
 
     this.containerEl = parent.createDiv({ cls: "vin-terminal-session" });
@@ -739,7 +793,8 @@ class TerminalSession {
       fontSize: 13.5,
       lineHeight: 1.4,
       letterSpacing: 0.3,
-      fontFamily: "'SF Mono', 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace",
+      fontFamily:
+        "'SF Mono', 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace",
       fontWeight: "400",
       fontWeightBold: "600",
       theme: getObsidianTheme(),
@@ -753,7 +808,7 @@ class TerminalSession {
     // Grab the hidden textarea xterm.js creates for input
     this.textareaEl = this.containerEl.querySelector(".xterm-helper-textarea");
 
-    // Spawn zsh inside a real PTY via Python helper.
+    // Spawn fish inside a real PTY via Python helper.
     // The helper accepts resize commands so the shell reflows to fit the panel.
     const { spawn } = require("child_process");
     const helperScript = ptyHelperPath;
@@ -773,7 +828,10 @@ class TerminalSession {
 
     // Wiki-link autocomplete
     this.autocomplete = new WikiLinkAutocomplete(
-      app, this.terminal, (data: string) => this.process.stdin?.write(data), this.containerEl
+      app,
+      this.terminal,
+      (data: string) => this.process.stdin?.write(data),
+      this.containerEl,
     );
 
     // Bookmark manager
@@ -811,36 +869,52 @@ class TerminalSession {
     // handlers can intercept them.
     const captureOpt = { capture: true };
     let dragCounter = 0;
-    this.containerEl.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
-    }, captureOpt);
+    this.containerEl.addEventListener(
+      "dragover",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+      },
+      captureOpt,
+    );
 
-    this.containerEl.addEventListener("dragenter", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter++;
-      if (dragCounter === 1) this.showDropZone();
-    }, captureOpt);
+    this.containerEl.addEventListener(
+      "dragenter",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter++;
+        if (dragCounter === 1) this.showDropZone();
+      },
+      captureOpt,
+    );
 
-    this.containerEl.addEventListener("dragleave", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter--;
-      if (dragCounter <= 0) {
+    this.containerEl.addEventListener(
+      "dragleave",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          this.hideDropZone();
+        }
+      },
+      captureOpt,
+    );
+
+    this.containerEl.addEventListener(
+      "drop",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         dragCounter = 0;
         this.hideDropZone();
-      }
-    }, captureOpt);
-
-    this.containerEl.addEventListener("drop", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter = 0;
-      this.hideDropZone();
-      this.handleDrop(e);
-    }, captureOpt);
+        this.handleDrop(e);
+      },
+      captureOpt,
+    );
   }
 
   private dropZoneEl: HTMLElement | null = null;
@@ -871,7 +945,15 @@ class TerminalSession {
     const badge = document.createElement("div");
     badge.className = "vin-drop-badge";
 
-    const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"]);
+    const IMAGE_EXTS = new Set([
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".webp",
+      ".bmp",
+      ".svg",
+    ]);
 
     for (const fp of filePaths) {
       const item = document.createElement("div");
@@ -923,7 +1005,11 @@ class TerminalSession {
     // 2. In-memory image data (e.g. macOS screenshot thumbnail dragged before
     //    it's saved to disk). The File object exists but has no .path.
     //    Read the blob, write it to a temp file, then paste that path.
-    if (paths.length === 0 && e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+    if (
+      paths.length === 0 &&
+      e.dataTransfer?.files &&
+      e.dataTransfer.files.length > 0
+    ) {
       const imageFiles: File[] = [];
       for (let i = 0; i < e.dataTransfer.files.length; i++) {
         const file = e.dataTransfer.files[i];
@@ -957,12 +1043,16 @@ class TerminalSession {
             if (trimmed.startsWith("file://")) {
               try {
                 paths.push(decodeURIComponent(trimmed.replace("file://", "")));
-              } catch { /* skip malformed URIs */ }
+              } catch {
+                /* skip malformed URIs */
+              }
             } else if (trimmed.startsWith("app://")) {
               // Obsidian app:// URIs encode vault-relative paths
               const match = trimmed.match(/app:\/\/[^/]+\/(.+)/);
               if (match) {
-                paths.push(pathMod.join(vaultPath, decodeURIComponent(match[1])));
+                paths.push(
+                  pathMod.join(vaultPath, decodeURIComponent(match[1])),
+                );
               }
             }
           }
@@ -1072,10 +1162,18 @@ class TerminalSession {
     this.terminal.options.theme = getObsidianTheme();
   }
 
-  addBookmark(label?: string) { this.bookmarkManager?.addBookmark(label); }
-  nextBookmark() { this.bookmarkManager?.jumpNext(); }
-  prevBookmark() { this.bookmarkManager?.jumpPrev(); }
-  clearBookmarks() { this.bookmarkManager?.clearAll(); }
+  addBookmark(label?: string) {
+    this.bookmarkManager?.addBookmark(label);
+  }
+  nextBookmark() {
+    this.bookmarkManager?.jumpNext();
+  }
+  prevBookmark() {
+    this.bookmarkManager?.jumpPrev();
+  }
+  clearBookmarks() {
+    this.bookmarkManager?.clearAll();
+  }
 
   destroy() {
     this.bookmarkManager?.destroy();
@@ -1164,7 +1262,7 @@ class FullscreenManager {
     this.overlay.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.key === "Escape" && !this.isRenaming) {
         const anyAutocomplete = this.view.sessions.some(
-          (s) => (s as any).autocomplete?.active
+          (s) => (s as any).autocomplete?.active,
         );
         if (!anyAutocomplete) {
           e.preventDefault();
@@ -1231,9 +1329,10 @@ class FullscreenManager {
 
     // Sync active session back to view
     // Force switchTo by clearing activeSession first
-    const target = (this.focusedSession && this.view.sessions.includes(this.focusedSession))
-      ? this.focusedSession
-      : this.view.sessions[0] || null;
+    const target =
+      this.focusedSession && this.view.sessions.includes(this.focusedSession)
+        ? this.focusedSession
+        : this.view.sessions[0] || null;
     this.view.activeSession = null;
     if (target) this.view.switchTo(target);
     this.view.renderTabs();
@@ -1274,7 +1373,8 @@ class FullscreenManager {
   /** Render the fullscreen tab bar: session tabs | layout switcher | actions */
   private renderFsTabs() {
     if (!this.tabBarEl || this.isRenaming) return;
-    while (this.tabBarEl.firstChild) this.tabBarEl.removeChild(this.tabBarEl.firstChild);
+    while (this.tabBarEl.firstChild)
+      this.tabBarEl.removeChild(this.tabBarEl.firstChild);
 
     // Session tabs
     const tabsArea = document.createElement("div");
@@ -1284,7 +1384,8 @@ class FullscreenManager {
       const tab = document.createElement("div");
       tab.className = "vin-fs-tab";
       if (session === this.focusedSession) tab.classList.add("is-active");
-      if (session.hasActivity && session !== this.focusedSession) tab.classList.add("has-activity");
+      if (session.hasActivity && session !== this.focusedSession)
+        tab.classList.add("has-activity");
 
       const label = document.createElement("span");
       label.className = "vin-fs-tab-label";
@@ -1303,21 +1404,28 @@ class FullscreenManager {
         e.preventDefault();
         const menu = new Menu();
         menu.addItem((item) =>
-          item.setTitle("Rename").setIcon("pencil").onClick(() => {
-            this.startTabRename(tab, label, session);
-          })
+          item
+            .setTitle("Rename")
+            .setIcon("pencil")
+            .onClick(() => {
+              this.startTabRename(tab, label, session);
+            }),
         );
         if (this.view.sessions.length > 1) {
           menu.addItem((item) =>
-            item.setTitle("Close").setIcon("x").onClick(() => {
-              this.view.closeSession(session);
-              this.savedPositions.delete(session);
-              if (this.focusedSession === session) {
-                this.focusedSession = this.view.sessions[this.view.sessions.length - 1] || null;
-              }
-              this.renderFsTabs();
-              this.rebuildPanes();
-            })
+            item
+              .setTitle("Close")
+              .setIcon("x")
+              .onClick(() => {
+                this.view.closeSession(session);
+                this.savedPositions.delete(session);
+                if (this.focusedSession === session) {
+                  this.focusedSession =
+                    this.view.sessions[this.view.sessions.length - 1] || null;
+                }
+                this.renderFsTabs();
+                this.rebuildPanes();
+              }),
           );
         }
         menu.showAtMouseEvent(e);
@@ -1356,10 +1464,26 @@ class FullscreenManager {
     layoutGroup.className = "vin-fs-layout-group";
 
     const layouts: { key: FullscreenLayout; label: string; svg: string }[] = [
-      { key: "single", label: "Single", svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/></svg>' },
-      { key: "split-h", label: "Side by side", svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="6" y1="1" x2="6" y2="11"/></svg>' },
-      { key: "split-v", label: "Stacked", svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="1" y1="6" x2="11" y2="6"/></svg>' },
-      { key: "grid", label: "Grid", svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>' },
+      {
+        key: "single",
+        label: "Single",
+        svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/></svg>',
+      },
+      {
+        key: "split-h",
+        label: "Side by side",
+        svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="6" y1="1" x2="6" y2="11"/></svg>',
+      },
+      {
+        key: "split-v",
+        label: "Stacked",
+        svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="1" y1="6" x2="11" y2="6"/></svg>',
+      },
+      {
+        key: "grid",
+        label: "Grid",
+        svg: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="10" height="10" rx="1"/><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>',
+      },
     ];
 
     for (const l of layouts) {
@@ -1384,7 +1508,11 @@ class FullscreenManager {
     this.tabBarEl.appendChild(controls);
   }
 
-  private startTabRename(tab: HTMLElement, label: HTMLSpanElement, session: TerminalSession) {
+  private startTabRename(
+    tab: HTMLElement,
+    label: HTMLSpanElement,
+    session: TerminalSession,
+  ) {
     this.isRenaming = true;
 
     const input = document.createElement("input");
@@ -1434,7 +1562,8 @@ class FullscreenManager {
     if (!this.gridEl || this.isRenaming) return;
 
     // Detach sessions from panes before clearing (so they don't get destroyed)
-    while (this.gridEl.firstChild) this.gridEl.removeChild(this.gridEl.firstChild);
+    while (this.gridEl.firstChild)
+      this.gridEl.removeChild(this.gridEl.firstChild);
 
     const visibleSessions = this.getVisibleSessions();
     const visibleSet = new Set(visibleSessions);
@@ -1500,7 +1629,9 @@ class FullscreenManager {
         if (this.focusedSession) {
           const idx = all.indexOf(this.focusedSession);
           const other = all[(idx + 1) % all.length];
-          return this.focusedSession === other ? [this.focusedSession] : [this.focusedSession, other];
+          return this.focusedSession === other
+            ? [this.focusedSession]
+            : [this.focusedSession, other];
         }
         return all.slice(0, 2);
       case "grid":
@@ -1515,7 +1646,11 @@ class FullscreenManager {
       session.fit();
     }
     // Don't steal focus from rename input
-    if (!this.isRenaming && this.focusedSession && sessions.includes(this.focusedSession)) {
+    if (
+      !this.isRenaming &&
+      this.focusedSession &&
+      sessions.includes(this.focusedSession)
+    ) {
       this.focusedSession.focus();
     }
   }
@@ -1525,11 +1660,11 @@ class FullscreenManager {
       session.setActivityCallback((s) => {
         if (s !== this.focusedSession && !s.hasActivity) {
           s.hasActivity = true;
-          const tabs = this.tabBarEl?.querySelectorAll('.vin-fs-tab');
+          const tabs = this.tabBarEl?.querySelectorAll(".vin-fs-tab");
           if (tabs) {
             const idx = this.view.sessions.indexOf(s);
             if (idx >= 0 && tabs[idx]) {
-              tabs[idx].classList.add('has-activity');
+              tabs[idx].classList.add("has-activity");
             }
           }
         }
@@ -1548,7 +1683,10 @@ class FullscreenManager {
       // Reset any inline display override
       session.containerEl.style.display = "";
       try {
-        if (saved.nextSibling && saved.nextSibling.parentNode === saved.parent) {
+        if (
+          saved.nextSibling &&
+          saved.nextSibling.parentNode === saved.parent
+        ) {
           saved.parent.insertBefore(session.containerEl, saved.nextSibling);
         } else {
           saved.parent.appendChild(session.containerEl);
@@ -1598,9 +1736,15 @@ class TerminalView extends ItemView {
   private resizeTimer: ReturnType<typeof setTimeout> | null = null;
   private isRenaming = false;
 
-  getViewType() { return VIEW_TYPE; }
-  getDisplayText() { return "Terminal"; }
-  getIcon() { return "terminal"; }
+  getViewType() {
+    return VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Terminal";
+  }
+  getIcon() {
+    return "terminal";
+  }
 
   getState() {
     return {
@@ -1622,13 +1766,19 @@ class TerminalView extends ItemView {
         const id = saved.id ?? this.nextId++;
         if (id >= this.nextId) this.nextId = id + 1;
         const vaultPath = (this.app.vault.adapter as any).basePath as string;
-        const session = new TerminalSession(this.sessionsEl, id, vaultPath, this.app);
-        session.name = saved.name ?? `zsh ${id}`;
+        const session = new TerminalSession(
+          this.sessionsEl,
+          id,
+          vaultPath,
+          this.app,
+        );
+        session.name = saved.name ?? `fish ${id}`;
         this.sessions.push(session);
         session.hide();
       }
 
-      const target = this.sessions.find((s) => s.id === state.activeId) ?? this.sessions[0];
+      const target =
+        this.sessions.find((s) => s.id === state.activeId) ?? this.sessions[0];
       if (target) this.switchTo(target);
       this.renderTabs();
     }
@@ -1684,7 +1834,7 @@ class TerminalView extends ItemView {
     this.registerEvent(
       this.app.workspace.on("css-change", () => {
         for (const s of this.sessions) s.updateTheme();
-      })
+      }),
     );
 
     // Create first session (setState will replace this if restoring)
@@ -1694,7 +1844,12 @@ class TerminalView extends ItemView {
   createSession(name?: string) {
     const id = this.nextId++;
     const vaultPath = (this.app.vault.adapter as any).basePath as string;
-    const session = new TerminalSession(this.sessionsEl, id, vaultPath, this.app);
+    const session = new TerminalSession(
+      this.sessionsEl,
+      id,
+      vaultPath,
+      this.app,
+    );
     if (name) session.name = name;
     this.sessions.push(session);
     this.switchTo(session);
@@ -1738,7 +1893,9 @@ class TerminalView extends ItemView {
     this.tabBarEl.empty();
 
     // Scrollable tabs area (left side)
-    const tabsArea = this.tabBarEl.createDiv({ cls: "vin-terminal-tabs-scroll" });
+    const tabsArea = this.tabBarEl.createDiv({
+      cls: "vin-terminal-tabs-scroll",
+    });
 
     this.sessions.forEach((session) => {
       const tab = tabsArea.createDiv({ cls: "vin-terminal-tab" });
@@ -1752,36 +1909,56 @@ class TerminalView extends ItemView {
         e.preventDefault();
         const menu = new Menu();
         menu.addItem((item) =>
-          item.setTitle("Rename").setIcon("pencil").onClick(() => {
-            this.startRename(tab, label, session);
-          })
+          item
+            .setTitle("Rename")
+            .setIcon("pencil")
+            .onClick(() => {
+              this.startRename(tab, label, session);
+            }),
         );
         menu.addItem((item) =>
-          item.setTitle("Close").setIcon("x").onClick(() => {
-            this.closeSession(session);
-          })
+          item
+            .setTitle("Close")
+            .setIcon("x")
+            .onClick(() => {
+              this.closeSession(session);
+            }),
         );
         menu.showAtMouseEvent(e);
       });
     });
 
-    const newBtn = tabsArea.createDiv({ cls: "vin-terminal-tab-new", text: "+" });
+    const newBtn = tabsArea.createDiv({
+      cls: "vin-terminal-tab-new",
+      text: "+",
+    });
     newBtn.addEventListener("click", () => this.createSession());
 
     // Pinned controls (right side, never scroll)
-    const controls = this.tabBarEl.createDiv({ cls: "vin-terminal-tab-controls" });
+    const controls = this.tabBarEl.createDiv({
+      cls: "vin-terminal-tab-controls",
+    });
 
     const fsBtn = controls.createDiv({ cls: "vin-terminal-tab-fullscreen" });
     setIcon(fsBtn, "expand");
     fsBtn.title = "Fullscreen";
     fsBtn.addEventListener("click", () => this.fullscreenManager?.toggle());
 
-    const helpBtn = controls.createDiv({ cls: "vin-terminal-tab-help", text: "?" });
+    const helpBtn = controls.createDiv({
+      cls: "vin-terminal-tab-help",
+      text: "?",
+    });
     helpBtn.title = "Shortcuts";
-    helpBtn.addEventListener("click", () => new ShortcutsModal(this.app).open());
+    helpBtn.addEventListener("click", () =>
+      new ShortcutsModal(this.app).open(),
+    );
   }
 
-  private startRename(tab: HTMLElement, label: HTMLSpanElement, session: TerminalSession) {
+  private startRename(
+    tab: HTMLElement,
+    label: HTMLSpanElement,
+    session: TerminalSession,
+  ) {
     this.isRenaming = true;
 
     // Replace only the label text with an input, keep tab structure intact
@@ -1933,7 +2110,8 @@ class OutputCaptureModal extends SuggestModal<CaptureOption> {
       const dd = String(now.getDate()).padStart(2, "0");
       const newPath = `Terminal Captures/${yyyy}-${mo}-${dd}-${hh}${mm}${ss}.md`;
 
-      const folderExists = await this.app.vault.adapter.exists("Terminal Captures");
+      const folderExists =
+        await this.app.vault.adapter.exists("Terminal Captures");
       if (!folderExists) {
         await this.app.vault.createFolder("Terminal Captures");
       }
