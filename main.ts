@@ -793,8 +793,7 @@ class TerminalSession {
       fontSize: 14,
       lineHeight: 1.4,
       letterSpacing: 0.3,
-      fontFamily:
-        "'Bookerly Display', 'PingFang SC', 'JetBrainsMono Nerd Font'",
+      fontFamily: "'PingFang SC', 'JetBrainsMono Nerd Font'",
       fontWeight: "400",
       fontWeightBold: "600",
       theme: getObsidianTheme(),
