@@ -790,11 +790,11 @@ class TerminalSession {
 
     this.terminal = new Terminal({
       cursorBlink: true,
-      fontSize: 13.5,
+      fontSize: 14,
       lineHeight: 1.4,
       letterSpacing: 0.3,
       fontFamily:
-        "'SF Mono', 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace",
+        "'Bookerly Display', 'PingFang SC', 'JetBrainsMono Nerd Font'",
       fontWeight: "400",
       fontWeightBold: "600",
       theme: getObsidianTheme(),
